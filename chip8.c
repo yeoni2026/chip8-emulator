@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define FILE_START 0x200
-#define WEIGHT 64
+#define WIDTH 64
 #define HEIGHT 32
 
 typedef struct { //대략 몇 KB정도..
@@ -16,7 +16,7 @@ typedef struct { //대략 몇 KB정도..
     uint8_t SP;
     uint8_t delay_timer;
     uint8_t sound_timer;
-    uint8_t screen[HEIGHT][WEIGHT];
+    uint8_t screen[HEIGHT][WIDTH];
     uint16_t key_pad;
 } chip8;
 
@@ -24,6 +24,7 @@ int load_rom(chip8* c, const char* path);
 void step(chip8* c);
 uint16_t fetch(chip8* c);
 void execute(chip8* c, uint16_t opcode);
+void print_screeen(chip8* c);
 
 int main(){
     chip8 *c = malloc(sizeof(chip8));
@@ -34,15 +35,36 @@ int main(){
 
     memset(c, 0, sizeof(*c));
 
-    int res = load_rom(c, "2-ibm-logo.ch8");
+    int menu;
+    printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
+    scanf("%d", &menu);
+
+    char * file_name;
+    switch(menu){
+        case 1:
+            strcpy(file_name, "1-chip8-logo.ch8");
+            break;
+        case 2:
+            strcpy(file_name, "2-ibm-logo.ch8");
+            break;
+        case 3:
+            strcpy(file_name, "3-corax+.ch8");
+            break;
+        default:
+            fprintf(stderr, "잘못된 번호를 입력했습니다.\n");
+            exit(EXIT_FAILURE);
+    }
+
+    int res = load_rom(c, file_name);
     if (res == -1){
         fprintf(stderr, "Fail in load_rom.\n");
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < 5; ++i){
+    for (int i = 0; i < 300; ++i){
         step(c);
     }
+    print_screeen(c);
     return 0;
 }
 
@@ -74,11 +96,11 @@ int load_rom(chip8 *c, const char* path){
 void step(chip8* c){
     uint16_t opcode = fetch(c);
     execute(c, opcode);
-    printf("opcode=%04X  PC=%04X  I=%04X\n", opcode, c->PC, c->I);
-    for (int i = 0; i < 16; ++i){
-       printf("V[%X]=%02X  ", i, c->V[i]); 
-    }
-    printf("\n");
+    // printf("opcode=%04X  PC=%04X  I=%04X\n", opcode, c->PC, c->I);
+    // for (int i = 0; i < 16; ++i){
+    //    printf("V[%X]=%02X  ", i, c->V[i]); 
+    // }
+    // printf("\n");
 }
 
 uint16_t fetch(chip8* c){
@@ -100,11 +122,34 @@ void execute(chip8* c, uint16_t opcode){
     switch(opcode >> 12){
         case 0x0:
             if (opcode == 0x00E0){
-                memset(c->screen, 0, HEIGHT * WEIGHT);
+                memset(c->screen, 0, HEIGHT * WIDTH);
+            } else if (opcode == 0x00EE){
+                c->SP--;
+                c->PC = c->stack[c->SP];
             }
             break;
         case 0x1:
             c->PC = nnn;
+            break;
+        case 0x2:
+            c->stack[c->SP] = c->PC;
+            c->PC = nnn;
+            c->SP++;
+            break;
+        case 0x3:
+            if (c->V[x] == nn){
+                c->PC += 2;
+            }
+            break;
+        case 0x4:
+            if (c->V[x] != nn){
+                c->PC += 2;
+            }
+            break; 
+        case 0x5:
+            if (c->V[x] == c->V[y]){
+                c->PC += 2;
+            }
             break;
         case 0x6:
             c->V[x] = nn;
@@ -112,8 +157,87 @@ void execute(chip8* c, uint16_t opcode){
         case 0x7:
             c->V[x] += nn;
             break;
-        case 0xA:
+        case 0x8:
+            switch(n){
+                case 0x0:
+                    c->V[x] = c->V[y];
+                    break;
+                case 0x1:
+                    c->V[x] |= c->V[y];
+                    break;
+                case 0x2:
+                    c->V[x] &= c->V[y];
+                    break;
+                case 0x3:
+                    c->V[x] ^= c->V[y];
+                    break;
+                case 0x4: {
+                    uint8_t flag = (uint16_t)c->V[x] + c->V[y] > 0xFF;
+                    c->V[x] += c->V[y];
+                    c->V[0xF] = flag;
+                    break;
+                }
+                case 0x5: {
+                    uint8_t flag = c->V[x] >= c->V[y];
+                    c->V[x] -= c->V[y];
+                    c->V[0xF] = flag;
+                    break;
+                }
+                case 0x6: {
+                    uint8_t flag = c->V[x] & 0x1;
+                    c->V[x] >>= 1;
+                    c->V[0xF] = flag;
+                    break;
+                }
+                case 0x7: {
+                    uint8_t flag = c->V[y] >= c->V[x];
+                    c->V[x] = c->V[y] - c->V[x];
+                    c->V[0xF] = flag;
+                    break;
+                }
+                case 0xE: {
+                    uint8_t flag = (c->V[x] >> 7) & 0x1;
+                    c->V[x] <<= 1;
+                    c->V[0xF] = flag;
+                    break;
+                }
+                default:
+                    printf("Fail. opcode: %04X\n", opcode);
+            }
+            break;
+        case 0x9:
+            if (c->V[x] != c->V[y]){
+                c->PC += 2;
+            }
+            break;
+        case 0xA: 
             c->I = nnn;
             break;
+        case 0xD:
+            c->V[0xF] = 0;
+            for (int row = 0; row < n; ++row){
+                if (c->V[y] + row >= HEIGHT) break;
+                uint8_t sprite_byte = c->memory[c->I + row];
+
+                for (int col = 0; col < 8; ++col){
+                    if (c->V[x] + col >= WIDTH) break;
+                    uint8_t sprite_bit = (sprite_byte >> (7 - col)) & 1;
+                    if (c->screen[c->V[y] + row][c->V[x] + col] && sprite_bit) c->V[0xF] = 1;
+                    c->screen[c->V[y] + row][c->V[x] + col] ^= sprite_bit;
+                }
+            }
+            break;
+        default:
+            printf("Fail. opcode: %04X\n", opcode);
+    }
+}
+
+void print_screeen(chip8* c){
+    for (int row = 0; row < HEIGHT; ++row){
+        for (int col = 0; col < WIDTH; ++col){
+            char symbol = c->screen[row][col] ? '#' : '.';
+            printf("%c ", symbol);
+        }
+        printf("\n");
     }
 }
