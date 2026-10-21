@@ -21,7 +21,6 @@ typedef struct { //대략 몇 KB정도..
 } chip8;
 
 int load_rom(chip8* c, const char* path);
-void step(chip8* c);
 uint16_t fetch(chip8* c);
 void execute(chip8* c, uint16_t opcode);
 void print_screeen(chip8* c);
@@ -39,7 +38,7 @@ int main(){
     printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
     scanf("%d", &menu);
 
-    char * file_name;
+    char file_name[64];
     switch(menu){
         case 1:
             strcpy(file_name, "1-chip8-logo.ch8");
@@ -61,9 +60,22 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
+    FILE* fp = fopen("file_content.txt", "w");
     for (int i = 0; i < 300; ++i){
-        step(c);
+        //임시 종료용
+        uint16_t prev_PC = c->PC;
+        
+        uint16_t opcode = fetch(c);
+        execute(c, opcode);
+        fprintf(fp, "%04X ", opcode);
+
+        if (prev_PC == c->PC) break;
+        if ((i + 1) % 10 == 0){
+            fprintf(fp, "\n");
+        }
     }
+    fclose(fp);
+
     print_screeen(c);
     return 0;
 }
@@ -93,16 +105,6 @@ int load_rom(chip8 *c, const char* path){
     return 0;
 }
 
-void step(chip8* c){
-    uint16_t opcode = fetch(c);
-    execute(c, opcode);
-    // printf("opcode=%04X  PC=%04X  I=%04X\n", opcode, c->PC, c->I);
-    // for (int i = 0; i < 16; ++i){
-    //    printf("V[%X]=%02X  ", i, c->V[i]); 
-    // }
-    // printf("\n");
-}
-
 uint16_t fetch(chip8* c){
     uint16_t opcode = c->memory[c->PC];
     opcode <<= 8;
@@ -123,7 +125,8 @@ void execute(chip8* c, uint16_t opcode){
         case 0x0:
             if (opcode == 0x00E0){
                 memset(c->screen, 0, HEIGHT * WIDTH);
-            } else if (opcode == 0x00EE){
+            } 
+            else if (opcode == 0x00EE){
                 c->SP--;
                 c->PC = c->stack[c->SP];
             }
@@ -225,6 +228,30 @@ void execute(chip8* c, uint16_t opcode){
                     if (c->screen[c->V[y] + row][c->V[x] + col] && sprite_bit) c->V[0xF] = 1;
                     c->screen[c->V[y] + row][c->V[x] + col] ^= sprite_bit;
                 }
+            }
+            break;
+        case 0xF:
+            switch(nn){
+                case 0x1E:
+                    c->I += c->V[x];
+                    break;
+                case 0x33:
+                    c->memory[c->I] = (c->V[x] / 100);
+                    c->memory[c->I + 1] = (c->V[x] / 10) % 10;
+                    c->memory[c->I + 2] = c->V[x] % 10;
+                    break;
+                case 0x55:
+                    for (int i = 0; i <= x; ++i){
+                        c->memory[c->I + i] = c->V[i];
+                    }
+                    break;
+                case 0x65:
+                    for (int i = 0; i <= x; ++i){
+                        c->V[i] = c->memory[c->I + i];
+                    }
+                    break;
+                default:
+                    printf("Fail. opcode: %04X\n", opcode);
             }
             break;
         default:
