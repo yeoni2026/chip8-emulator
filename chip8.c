@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #define FILE_START 0x200
 #define WIDTH 64
@@ -59,6 +60,8 @@ int main(){
         fprintf(stderr, "Fail in load_rom.\n");
         exit(EXIT_FAILURE);
     }
+
+    srand(time(NULL));
 
     FILE* fp = fopen("file_content.txt", "w");
     for (int i = 0; i < 300; ++i){
@@ -216,6 +219,12 @@ void execute(chip8* c, uint16_t opcode){
         case 0xA: 
             c->I = nnn;
             break;
+        case 0xB:
+            c->PC = (nnn + c->V[0]) & 0xFFF; // 메모리 범위 초과 방지
+            break;
+        case 0xC:
+            c->V[x] = (rand() % 256) & nn;
+            break; 
         case 0xD:
             c->V[0xF] = 0;
             for (int row = 0; row < n; ++row){
