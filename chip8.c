@@ -147,6 +147,10 @@ int load_rom(chip8 *c, const char* path){
 }
 
 uint16_t fetch(chip8* c){
+    if (c->PC >= FILE_START + 4096){
+        fprintf(stderr, "segmentation fault.\n");
+        exit(EXIT_FAILURE);
+    }
     uint16_t opcode = c->memory[c->PC];
     opcode <<= 8;
     opcode |= c->memory[c->PC + 1];
