@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#define FONT_START 0x050
 #define FILE_START 0x200
 #define WIDTH 64
 #define HEIGHT 32
@@ -21,12 +22,31 @@ typedef struct { //대략 몇 KB정도..
     uint16_t key_pad;
 } chip8;
 
+static const uint8_t font[80] = {
+    0xF0,0x90,0x90,0x90,0xF0,  // 0
+    0x20,0x60,0x20,0x20,0x70,  // 1
+    0xF0,0x10,0xF0,0x80,0xF0,  // 2
+    0xF0,0x10,0xF0,0x10,0xF0,  // 3
+    0x90,0x90,0xF0,0x10,0x10,  // 4
+    0xF0,0x80,0xF0,0x10,0xF0,  // 5
+    0xF0,0x80,0xF0,0x90,0xF0,  // 6
+    0xF0,0x10,0x20,0x40,0x40,  // 7
+    0xF0,0x90,0xF0,0x90,0xF0,  // 8
+    0xF0,0x90,0xF0,0x10,0xF0,  // 9
+    0xF0,0x90,0xF0,0x90,0x90,  // A
+    0xE0,0x90,0xE0,0x90,0xE0,  // B
+    0xF0,0x80,0x80,0x80,0xF0,  // C
+    0xE0,0x90,0x90,0x90,0xE0,  // D
+    0xF0,0x80,0xF0,0x80,0xF0,  // E
+    0xF0,0x80,0xF0,0x80,0x80   // F
+};
+
 int load_rom(chip8* c, const char* path);
 uint16_t fetch(chip8* c);
 void execute(chip8* c, uint16_t opcode);
 void print_screeen(chip8* c);
 
-int main(){
+int main(int argc, char *argv[]){
     chip8 *c = malloc(sizeof(chip8));
     if (c == NULL){
         fprintf(stderr, "Fail to assign heap.\n");
@@ -34,25 +54,34 @@ int main(){
     }
 
     memset(c, 0, sizeof(*c));
-
-    int menu;
-    printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
-    scanf("%d", &menu);
-
+    
     char file_name[64];
-    switch(menu){
-        case 1:
-            strcpy(file_name, "1-chip8-logo.ch8");
-            break;
-        case 2:
-            strcpy(file_name, "2-ibm-logo.ch8");
-            break;
-        case 3:
-            strcpy(file_name, "3-corax+.ch8");
-            break;
-        default:
-            fprintf(stderr, "잘못된 번호를 입력했습니다.\n");
-            exit(EXIT_FAILURE);
+    
+    if (argc == 1){
+        int menu;
+        printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
+        scanf("%d", &menu);
+
+
+        switch(menu){
+            case 1:
+                strcpy(file_name, "1-chip8-logo.ch8");
+                break;
+            case 2:
+                strcpy(file_name, "2-ibm-logo.ch8");
+                break;
+            case 3:
+                strcpy(file_name, "3-corax+.ch8");
+                break;
+            default:
+                fprintf(stderr, "잘못된 번호를 입력했습니다.\n");
+                exit(EXIT_FAILURE);
+        }
+    } else if (argc == 2){
+        strcpy(file_name, argv[1]);    
+    } else {
+        fprintf(stderr, "Usage: %s or %s <file_name>", argv[0], argv[0]);
+        exit(EXIT_FAILURE);
     }
 
     int res = load_rom(c, file_name);
@@ -85,7 +114,9 @@ int main(){
 
 int load_rom(chip8 *c, const char* path){
     FILE* fp = fopen(path, "rb");
-    if (fp == NULL) return -1;
+    if (fp == NULL) {
+        return -1;
+    }
 
     fseek(fp, 0, SEEK_END);
     long size = ftell(fp);
@@ -94,6 +125,13 @@ int load_rom(chip8 *c, const char* path){
     if (size <= 0 || size > 3584) {
         fclose(fp);
         return -1;
+    }
+
+    //메모리의 폰트 시작 주소에 폰트 내용 복사
+    for (int i = 0; i < 16; ++i){
+        for (int j = 0; j < 5; ++j){
+            c->memory[FONT_START + 5 * i + j] = font[5 * i + j];
+        }
     }
 
     //메모리의 파일 시작 주소에 파일 내용 복사
@@ -243,6 +281,9 @@ void execute(chip8* c, uint16_t opcode){
             switch(nn){
                 case 0x1E:
                     c->I += c->V[x];
+                    break;
+                case 0x29:
+                    c->I = FONT_START + (c->V[x] & 0xF) * 5;
                     break;
                 case 0x33:
                     c->memory[c->I] = (c->V[x] / 100);
