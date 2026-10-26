@@ -5,6 +5,7 @@
 #include "chip8_fun.h"
 
 void draw_screen(SDL_Renderer *ren, chip8 *c);
+int key_to_chip8(SDL_Scancode sc);
 
 int main(int argc, char *argv[]) {
     chip8 *c = malloc(sizeof(chip8));
@@ -21,7 +22,6 @@ int main(int argc, char *argv[]) {
         int menu;
         printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
         scanf("%d", &menu);
-
 
         switch(menu){
             case 1:
@@ -67,6 +67,19 @@ int main(int argc, char *argv[]) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = 0;
+            else if (e.type == SDL_KEYDOWN){
+                int num = key_to_chip8(e.key.keysym.scancode);
+                if (num != -1){
+                    c->key_pad |= 0x1 << (num & 0xF);
+                    printf("%X key down.\n", num & 0xF);
+                }
+            }
+            else if (e.type == SDL_KEYUP){
+                int num = key_to_chip8(e.key.keysym.scancode);
+                if (num != -1){
+                    c->key_pad &= ~(0x1 << (num & 0xF));
+                }
+            }
         }
 
         //step 10번 밟기.
@@ -117,5 +130,44 @@ void draw_screen(SDL_Renderer *ren, chip8 *c){
                 SDL_RenderFillRect(ren, &r);
             }
         }
+    }
+}
+
+int key_to_chip8(SDL_Scancode sc){
+    switch(sc){
+        case SDL_SCANCODE_1:
+            return 0x1;
+        case SDL_SCANCODE_2:
+            return 0x2;
+        case SDL_SCANCODE_3:
+            return 0x3;
+        case SDL_SCANCODE_4:
+            return 0xC;
+        case SDL_SCANCODE_Q:
+            return 0x4;
+        case SDL_SCANCODE_W:
+            return 0x5;
+        case SDL_SCANCODE_E:
+            return 0x6;
+        case SDL_SCANCODE_R:
+            return 0xD;
+        case SDL_SCANCODE_A:
+            return 0x7;
+        case SDL_SCANCODE_S:
+            return 0x8;
+        case SDL_SCANCODE_D:
+            return 0x9;
+        case SDL_SCANCODE_F:
+            return 0xE;
+        case SDL_SCANCODE_Z:
+            return 0xA;
+        case SDL_SCANCODE_X:
+            return 0x0;
+        case SDL_SCANCODE_C:
+            return 0xB;
+        case SDL_SCANCODE_V:
+            return 0xF;
+        default:
+            return -1;
     }
 }
