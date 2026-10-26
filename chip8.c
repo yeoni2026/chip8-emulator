@@ -45,6 +45,8 @@ int load_rom(chip8* c, const char* path);
 uint16_t fetch(chip8* c);
 void execute(chip8* c, uint16_t opcode);
 void print_screeen(chip8* c);
+void tick_timers(chip8 *c);
+void extract_command(uint16_t opcode, int index);
 
 int main(int argc, char *argv[]){
     chip8 *c = malloc(sizeof(chip8));
@@ -92,21 +94,16 @@ int main(int argc, char *argv[]){
 
     srand(time(NULL));
 
-    FILE* fp = fopen("file_content.txt", "w");
     for (int i = 0; i < 300; ++i){
         //임시 종료용
         uint16_t prev_PC = c->PC;
-        
         uint16_t opcode = fetch(c);
         execute(c, opcode);
-        fprintf(fp, "%04X ", opcode);
-
         if (prev_PC == c->PC) break;
-        if ((i + 1) % 10 == 0){
-            fprintf(fp, "\n");
-        }
+
+        extract_command(opcode, i);
+        if ((i + 1) % 10 == 0) tick_timers(c);
     }
-    fclose(fp);
 
     print_screeen(c);
     return 0;
@@ -283,6 +280,15 @@ void execute(chip8* c, uint16_t opcode){
             break;
         case 0xF:
             switch(nn){
+                case 0x07:
+                    c->V[x] = c->delay_timer;
+                    break;
+                case 0x15:
+                    c->delay_timer = c->V[x];
+                    break;
+                case 0x18:
+                    c->sound_timer = c->V[x];
+                    break;
                 case 0x1E:
                     c->I += c->V[x];
                     break;
@@ -321,4 +327,21 @@ void print_screeen(chip8* c){
         }
         printf("\n");
     }
+}
+
+void tick_timers(chip8 *c){
+    if (c->delay_timer > 0) c->delay_timer -= 1;
+    if (c->sound_timer > 0) c->sound_timer -= 1;
+}
+
+void extract_command(uint16_t opcode, int index){
+    FILE* fp = fopen("content.txt", "a");
+    if (fp == NULL) return;
+
+    fprintf(fp, "%04X ", opcode);
+
+    if ((index + 1) % 10 == 0){
+        fprintf(fp, "\n");
+    }
+    fclose(fp);
 }
