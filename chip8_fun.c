@@ -61,12 +61,17 @@ int execute(chip8* c, uint16_t opcode){
 
     switch(opcode >> 12){
         case 0x0:
-            if (opcode == 0x00E0){
-                memset(c->screen, 0, HEIGHT * WIDTH);
-            } 
-            else if (opcode == 0x00EE){
-                c->SP--;
-                c->PC = c->stack[c->SP];
+            switch(nn){
+                case 0xE0:
+                    memset(c->screen, 0, HEIGHT * WIDTH);
+                    break;
+                case 0xEE:
+                    c->SP--;
+                    c->PC = c->stack[c->SP];
+                    break;
+                default:
+                    printf("Fail. opcode: %04X\n", opcode);
+                    return -1;
             }
             break;
         case 0x1:
@@ -173,6 +178,19 @@ int execute(chip8* c, uint16_t opcode){
                     if (c->screen[c->V[y] + row][c->V[x] + col] && sprite_bit) c->V[0xF] = 1;
                     c->screen[c->V[y] + row][c->V[x] + col] ^= sprite_bit;
                 }
+            }
+            break;
+        case 0xE:
+            switch(nn){
+                case 0x9E:
+                    if (c->key_pad >> (c->V[x] & 0xF) & 0x1) c->PC += 2;
+                    break;
+                case 0xA1:
+                    if (!(c->key_pad >> (c->V[x] & 0xF) & 0x1)) c->PC += 2;
+                    break;
+                default:
+                    printf("Fail. opcode: %04X\n", opcode);
+                    return -1;
             }
             break;
         case 0xF:

@@ -4,6 +4,8 @@
 #include <time.h>
 #include "chip8_fun.h"
 
+#define FRAME 10
+
 void draw_screen(SDL_Renderer *ren, chip8 *c);
 int key_to_chip8(SDL_Scancode sc);
 
@@ -20,19 +22,24 @@ int main(int argc, char *argv[]) {
     
     if (argc == 1){
         int menu;
-        printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n===================\n선택: ");
+        printf("== 프로그램 선택 ==\n1. chip8 로고\n2. IBM 로고\n3. corax+ 검사\n4. Dinorun 게임\n5. octojam 디자인\n===================\n선택: ");
         scanf("%d", &menu);
 
         switch(menu){
             case 1:
-                strcpy(file_name, "1-chip8-logo.ch8");
+                strcpy(file_name, "programs/1-chip8-logo.ch8");
                 break;
             case 2:
-                strcpy(file_name, "2-ibm-logo.ch8");
+                strcpy(file_name, "programs/2-ibm-logo.ch8");
                 break;
             case 3:
-                strcpy(file_name, "3-corax+.ch8");
+                strcpy(file_name, "programs/3-corax+.ch8");
                 break;
+            case 4:
+                strcpy(file_name, "programs/dinorun.ch8");
+                break;
+            case 5:
+                strcpy(file_name, "programs/octojam1title.ch8");
             default:
                 fprintf(stderr, "잘못된 번호를 입력했습니다.\n");
                 exit(EXIT_FAILURE);
@@ -71,7 +78,6 @@ int main(int argc, char *argv[]) {
                 int num = key_to_chip8(e.key.keysym.scancode);
                 if (num != -1){
                     c->key_pad |= 0x1 << (num & 0xF);
-                    printf("%X key down.\n", num & 0xF);
                 }
             }
             else if (e.type == SDL_KEYUP){
@@ -82,8 +88,8 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        //step 10번 밟기.
-        for (int i = 0; i < 10; ++i){
+        //step 밟기.
+        for (int i = 0; i < FRAME; ++i){
             uint16_t opcode;
             int res = fetch(c, &opcode);
             if (res == -1){
