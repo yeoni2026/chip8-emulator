@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 5:
                 strcpy(file_name, "programs/octojam1title.ch8");
+                break;
             default:
                 fprintf(stderr, "잘못된 번호를 입력했습니다.\n");
                 exit(EXIT_FAILURE);
