@@ -198,6 +198,20 @@ int execute(chip8* c, uint16_t opcode){
                 case 0x07:
                     c->V[x] = c->delay_timer;
                     break;
+                case 0x0A: {
+                    int key_pressed = 0;
+
+                    for (int i = 0; i < 16; ++i) {
+                        if ((c->key_pad >> i) & 1) {
+                            c->V[x] = i;
+                            key_pressed = 1;
+                            break;
+                        }
+                    }
+
+                    if (!key_pressed)
+                        c->PC -= 2;
+                }
                 case 0x15:
                     c->delay_timer = c->V[x];
                     break;
