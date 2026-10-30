@@ -44,4 +44,3 @@ int fetch(chip8* c, uint16_t *opcode);
 int execute(chip8* c, uint16_t opcode);
 void print_screeen(chip8* c);
 void tick_timers(chip8 *c);
-void extract_command(uint16_t opcode, int index);

@@ -265,15 +265,3 @@ void tick_timers(chip8 *c){
     if (c->delay_timer > 0) c->delay_timer -= 1;
     if (c->sound_timer > 0) c->sound_timer -= 1;
 }
-
-void extract_command(uint16_t opcode, int index){
-    FILE* fp = fopen("content.txt", "a");
-    if (fp == NULL) return;
-
-    fprintf(fp, "%04X ", opcode);
-
-    if ((index + 1) % 10 == 0){
-        fprintf(fp, "\n");
-    }
-    fclose(fp);
-}

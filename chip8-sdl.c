@@ -102,8 +102,6 @@ int main(int argc, char *argv[]) {
                 running = 0;
                 break;
             }
-
-            extract_command(opcode, i);
         }
         tick_timers(c);
 
