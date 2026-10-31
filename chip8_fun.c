@@ -211,6 +211,7 @@ int execute(chip8* c, uint16_t opcode){
 
                     if (!key_pressed)
                         c->PC -= 2;
+                    break;
                 }
                 case 0x15:
                     c->delay_timer = c->V[x];
