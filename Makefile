@@ -1,5 +1,9 @@
+.PHONY: all
+
 EMU = src/emulator
 COMP = src/compiler
+
+all: chip8-sdl makech8
 
 chip8-sdl: $(EMU)/chip8-sdl.c $(EMU)/chip8_fun.c
 	gcc $(EMU)/chip8-sdl.c $(EMU)/chip8_fun.c \
