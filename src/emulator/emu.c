@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <time.h>
-#include "chip8_fun.h"
+#include "chip8.h"
 
 #define FRAME 10
 
