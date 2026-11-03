@@ -28,6 +28,12 @@ int main(int argc, char *argv[]){
     int res = lexer(buffer, size, token_array);
     if (res == -1) exit(EXIT_FAILURE);
     
+    //임시 출력
+    Token *ptr = token_array;
+    while(ptr->token_type != TOK_EOF){
+        printf("%s\n", ptr->content);
+        ++ptr;
+    }
     free(buffer);
     free(token_array);
     

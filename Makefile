@@ -3,7 +3,10 @@
 EMU = src/emulator
 COMP = src/compiler
 
-all: emu makech8
+all: lest emu makech8
+
+lest: $(COMP)/lest.c $(COMP)/lexer.c
+	gcc $(COMP)/lest.c $(COMP)/lexer.c -o lest
 
 emu: $(EMU)/emu.c $(EMU)/chip8.c
 	gcc $(EMU)/emu.c $(EMU)/chip8.c \
