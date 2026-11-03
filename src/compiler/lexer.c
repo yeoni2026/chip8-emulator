@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static const enum Type_flag {NUM_FLAG, PASS};
+typedef enum {
+    NUM_FLAG, 
+    PASS
+} Type_flag;
 
 static Token_type get_token_type(char ch){
     switch(ch){
@@ -15,7 +18,7 @@ static Token_type get_token_type(char ch){
 }
 
 int lexer(char *command, int command_size, Token *token_array){
-    enum Type_flag type_flag = PASS;
+    Type_flag type_flag = PASS;
 
     int token_index = 0;
     int sum_of_num = 0;
