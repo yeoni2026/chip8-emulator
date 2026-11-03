@@ -1,6 +1,13 @@
 #pragma once
 
-typedef enum { NATURAL_NUM, PLUS_OPERATOR, MINUS_OPERATOR} Token_type;
+typedef enum {
+    TOK_NUM,
+    TOK_PLUS,
+    TOK_MINUS,
+    TOK_NEWLINE,
+    TOK_EOF
+} Token_type;
+
 
 typedef struct {
     Token_type token_type;
