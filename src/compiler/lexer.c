@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 typedef enum {
-    NUM_FLAG, 
-    PASS
-} Type_flag;
+    PUSH_NUM, 
+    PUSH_NONE
+} Push_flag;
 
 static Token_type get_token_type(char ch){
     switch(ch){
@@ -18,14 +18,15 @@ static Token_type get_token_type(char ch){
 }
 
 int lexer(char *command, int command_size, Token *token_array){
-    Type_flag type_flag = PASS;
+    Push_flag push_flag = PUSH_NONE;
 
     int token_index = 0;
     int sum_of_num = 0;
     int line_number = 1;
     for (int i = 0; i < command_size; ++i){
+
         if (sum_of_num){
-            type_flag = NUM_FLAG;
+            push_flag = PUSH_NUM;
         }
 
         if (command[i] == '\n' && i != command_size - 1){
@@ -37,12 +38,13 @@ int lexer(char *command, int command_size, Token *token_array){
             continue;
         } else if (command[i] >= '0' && command[i] <= '9'){
             sum_of_num += command[i] - '0';
-            type_flag = PASS;
+            push_flag = PUSH_NONE;
         } else if (command[i] == '+' || command[i] == '-'){
-            char str[2] = {command[i], '\0'};
             Token token;
+            token.content = malloc(sizeof(char) * 2);
+            token.content[0] = command[i];
+            token.content[1] = '\0';
             token.token_type = get_token_type(command[i]);
-            strcpy(token.content, str);
             token_array[token_index] = token;
             ++token_index;
         } else {
@@ -50,12 +52,11 @@ int lexer(char *command, int command_size, Token *token_array){
             return -1;
         }
 
-        if (type_flag == NUM_FLAG){
-            char str[4];
-            snprintf(str, sizeof(str), "%d", sum_of_num);
+        if (push_flag== PUSH_NUM){
             Token token;
+            token.content = malloc(sizeof(char) * 4);
+            snprintf(token.content, 4, "%d", sum_of_num);
             token.token_type = TOK_NUM;
-            strcpy(token.content, str);
             token_array[token_index] = token;
             ++token_index;
         }

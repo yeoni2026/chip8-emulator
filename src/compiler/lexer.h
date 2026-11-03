@@ -11,7 +11,7 @@ typedef enum {
 
 typedef struct {
     Token_type token_type;
-    char content[24]; 
+    char *content; 
 } Token;
 
 int lexer(char *command, int command_size, Token *token_array);
