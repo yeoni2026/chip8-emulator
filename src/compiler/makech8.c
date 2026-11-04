@@ -75,8 +75,6 @@ int main(int argc, char *argv[]){
         }
         fwrite(&sum, sizeof(uint16_t), 1, bin_fp);
     }
-    fclose(txt_fp);
-    fclose(bin_fp);
 
     return 0;
 }
