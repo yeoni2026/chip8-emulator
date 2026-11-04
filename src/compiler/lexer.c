@@ -16,6 +16,12 @@ static Token_type get_token_type(char ch){
             return TOK_PLUS;
         case '-':
             return TOK_MINUS;
+        case '(':
+            return TOK_LPAREN;
+        case ')':
+            return TOK_RPAREN;
+        default:
+            return TOK_EOF;
     }
 }
 
@@ -39,7 +45,7 @@ int lexer(char *command, int command_size, Token *token_array){
             sum_of_num *= 10;
             sum_of_num += command[i] - '0';
             push_flag = PUSH_NONE;
-        } else if (command[i] == '+' || command[i] == '-'){
+        } else if (command[i] == '+' || command[i] == '-' || command[i] == '(' || command[i] == ')'){
             if (push_flag == PUSH_NUM) i -= 1;
             else push_flag = PUSH_OPERATOR;
         } else {

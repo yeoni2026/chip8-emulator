@@ -5,6 +5,8 @@ typedef enum {
     TOK_PLUS,
     TOK_MINUS,
     TOK_NEWLINE,
+    TOK_LPAREN,
+    TOK_RPAREN,
     TOK_EOF
 } Token_type;
 
