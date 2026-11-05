@@ -8,5 +8,4 @@ typedef struct AST_node {
     AST_node *right;
 } AST_node;
 
-AST_node* parser_oper(AST_node * node);
-AST_node* parser_term(AST_node * node);
+int parser(Token *token_array, AST_node *ast_array[]); //배열 요소 개수 반환
